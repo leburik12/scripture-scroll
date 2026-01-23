@@ -97,7 +97,7 @@ export function BibleReader() {
           {sidebarOpen && (
             <div className="flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-primary" />
-              <span className="font-semibold text-sidebar-foreground">Scripture</span>
+              <span className="font-semibold text-sidebar-foreground">መጽሐፍ ቅዱስ</span>
             </div>
           )}
           <Button
@@ -141,7 +141,7 @@ export function BibleReader() {
               <SheetContent side="left" className="w-80 p-0">
                 <div className="flex items-center gap-2 p-4 border-b border-border">
                   <BookOpen className="w-5 h-5 text-primary" />
-                  <span className="font-semibold">Scripture</span>
+                  <span className="font-semibold">መጽሐፍ ቅዱስ</span>
                 </div>
                 <BibleNavigation
                   currentBook={currentBook}
@@ -180,7 +180,7 @@ export function BibleReader() {
                     <Search className="w-5 h-5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Search (Press /)</TooltipContent>
+                <TooltipContent>ፈልግ (Press /)</TooltipContent>
               </Tooltip>
               
               <Tooltip>
@@ -199,7 +199,7 @@ export function BibleReader() {
                     )}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Bookmarks</TooltipContent>
+                <TooltipContent>ዕልባቶች</TooltipContent>
               </Tooltip>
               
               <ThemeSwitcher theme={theme} onThemeChange={setTheme} />
@@ -222,10 +222,10 @@ export function BibleReader() {
               <div className="text-center py-12">
                 <BookOpen className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                 <h2 className="text-xl font-semibold text-foreground mb-2">
-                  Chapter not available
+                  ምዕራፍ አልተገኘም
                 </h2>
                 <p className="text-muted-foreground">
-                  This chapter's content isn't loaded yet. Try selecting Genesis 1 or John 1.
+                  ይህ ምዕራፍ ገና አልተጫነም። ኦሪት ዘፍጥረት 1 ወይም የዮሐንስ ወንጌል 1 ይምረጡ።
                 </p>
               </div>
             )}
@@ -239,7 +239,7 @@ export function BibleReader() {
               onClick={resumeReading}
               className="w-full md:w-auto md:mx-auto shadow-soft"
             >
-              Resume Reading
+              ማንበብ ቀጥል
             </Button>
           </div>
         )}

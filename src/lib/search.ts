@@ -1,5 +1,5 @@
 // Search engine with regex support and safety guards
-import { BIBLE_BOOKS, SAMPLE_BIBLE_DATA, type Verse } from '@/data/bibleData';
+import { BIBLE_BOOKS, BIBLE_DATA, type Verse } from '@/data/bibleData';
 
 export interface SearchResult {
   bookId: string;
@@ -81,7 +81,7 @@ export function search(
   
   // Search through books
   for (const book of booksToSearch) {
-    const chapters = SAMPLE_BIBLE_DATA[book.id];
+    const chapters = BIBLE_DATA[book.id];
     if (!chapters) continue;
     
     for (const chapter of chapters) {
@@ -142,7 +142,7 @@ export function buildSearchIndex(): Map<string, Set<string>> {
   const index = new Map<string, Set<string>>();
   
   for (const book of BIBLE_BOOKS) {
-    const chapters = SAMPLE_BIBLE_DATA[book.id];
+    const chapters = BIBLE_DATA[book.id];
     if (!chapters) continue;
     
     for (const chapter of chapters) {
