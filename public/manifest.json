@@ -1,0 +1,16 @@
+{
+  "name": "Scripture",
+  "short_name": "Scripture",
+  "description": "A beautiful Bible reading and study app",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf8f5",
+  "theme_color": "#2d3a5f",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
