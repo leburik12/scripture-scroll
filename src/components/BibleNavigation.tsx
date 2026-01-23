@@ -110,8 +110,8 @@ export function BibleNavigation({
   return (
     <ScrollArea className="h-full">
       <div className="p-2 space-y-1">
-        {renderTestament('OT', 'Old Testament', otBooks)}
-        {renderTestament('NT', 'New Testament', ntBooks)}
+        {renderTestament('OT', 'ብሉይ ኪዳን', otBooks)}
+        {renderTestament('NT', 'አዲስ ኪዳን', ntBooks)}
       </div>
     </ScrollArea>
   );
