@@ -6,6 +6,7 @@ import {
   type Chapter, 
   type RawAmharicBible 
 } from '@/data/bibleData';
+import { verifyBibleContent, logVerificationReport } from '@/lib/verseVerification';
 
 interface RawEnglishBook {
   abbrev: string;
@@ -86,6 +87,10 @@ export function useBibleLoader() {
         // Set the Bible data globally
         setBibleData(bibleData);
         setBibleDataEnglish(englishBibleData);
+
+        // Run verification and log discrepancies
+        const verificationReport = verifyBibleContent();
+        logVerificationReport(verificationReport);
 
         setProgress(100);
         setIsLoading(false);
