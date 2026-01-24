@@ -117,7 +117,7 @@ export function SearchPanel({ onResultClick, isOpen, onClose }: SearchPanelProps
           )}
           
           {/* Results */}
-          <ScrollArea className="max-h-[60vh]">
+          <ScrollArea className="h-[60vh] overflow-y-auto">
             {results.length > 0 ? (
               <div className="divide-y divide-border">
                 {results.map((result, index) => (

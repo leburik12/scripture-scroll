@@ -7,7 +7,6 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
-  Settings2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,14 +14,17 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { BibleNavigation } from '@/components/BibleNavigation';
 import { ChapterDisplay } from '@/components/VerseDisplay';
+import { DualChapterDisplay } from '@/components/DualVerseDisplay';
 import { ChapterNavigation } from '@/components/ChapterNavigation';
 import { SearchPanel } from '@/components/SearchPanel';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { BookmarksList } from '@/components/BookmarksList';
 import { useBible } from '@/hooks/useBible';
 import { useTheme } from '@/hooks/useTheme';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation';
-import { getBook, BIBLE_BOOKS } from '@/data/bibleData';
+import { getBook, getDualChapter, BIBLE_BOOKS, ENGLISH_BOOK_NAMES } from '@/data/bibleData';
 import { cn } from '@/lib/utils';
 
 export function BibleReader() {
@@ -50,6 +52,23 @@ export function BibleReader() {
   } = useBible();
   
   const { theme, setTheme } = useTheme();
+  const { language } = useLanguage();
+  
+  // Get dual chapter for side-by-side display
+  const dualChapter = useMemo(() => {
+    return getDualChapter(currentBook, currentChapter);
+  }, [currentBook, currentChapter]);
+  
+  // Get display book name based on language
+  const displayBookName = useMemo(() => {
+    if (language === 'english') {
+      return ENGLISH_BOOK_NAMES[currentBook] || bookName;
+    } else if (language === 'both') {
+      const englishName = ENGLISH_BOOK_NAMES[currentBook] || '';
+      return `${bookName} / ${englishName}`;
+    }
+    return bookName;
+  }, [language, currentBook, bookName]);
   
   // Keyboard navigation
   useKeyboardNavigation({
@@ -160,7 +179,7 @@ export function BibleReader() {
             
             {/* Chapter Navigation */}
             <ChapterNavigation
-              bookName={bookName}
+              bookName={displayBookName}
               chapter={currentChapter}
               totalChapters={chapterCount}
               onPrevious={prevChapter}
@@ -202,6 +221,7 @@ export function BibleReader() {
                 <TooltipContent>ዕልባቶች</TooltipContent>
               </Tooltip>
               
+              <LanguageSelector />
               <ThemeSwitcher theme={theme} onThemeChange={setTheme} />
             </div>
           </div>
@@ -209,10 +229,14 @@ export function BibleReader() {
         
         {/* Scripture Content */}
         <ScrollArea className="flex-1">
-          <div className="max-w-3xl mx-auto px-4 md:px-8 py-8 md:py-12">
-            {chapter ? (
-              <ChapterDisplay
-                verses={chapter.verses}
+          <div className={cn(
+            "mx-auto px-4 md:px-8 py-8 md:py-12",
+            language === 'both' ? 'max-w-5xl' : 'max-w-3xl'
+          )}>
+            {dualChapter ? (
+              <DualChapterDisplay
+                verses={dualChapter.verses}
+                language={language}
                 bookmarkMap={bookmarkSet}
                 showVerseNumbers={true}
                 onVerseClick={(verseNum) => toggleBookmark(verseNum)}
