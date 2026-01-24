@@ -20,12 +20,20 @@ import { SearchPanel } from '@/components/SearchPanel';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { BookmarksList } from '@/components/BookmarksList';
+import { VerseOfTheDay } from '@/components/VerseOfTheDay';
 import { useBible } from '@/hooks/useBible';
 import { useTheme } from '@/hooks/useTheme';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation';
 import { getBook, getDualChapter, BIBLE_BOOKS, ENGLISH_BOOK_NAMES } from '@/data/bibleData';
 import { cn } from '@/lib/utils';
+
+// Today's verse configuration - John 14:23
+const VERSE_OF_THE_DAY = {
+  bookId: 'jhn',
+  chapter: 14,
+  verse: 23,
+};
 
 export function BibleReader() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -233,6 +241,15 @@ export function BibleReader() {
             "mx-auto px-4 md:px-8 py-8 md:py-12",
             language === 'both' ? 'max-w-5xl' : 'max-w-3xl'
           )}>
+            {/* Verse of the Day - shown at top of content */}
+            <VerseOfTheDay
+              bookId={VERSE_OF_THE_DAY.bookId}
+              chapter={VERSE_OF_THE_DAY.chapter}
+              verse={VERSE_OF_THE_DAY.verse}
+              onNavigate={(bookId, chapter, verse) => goToLocation(bookId, chapter, verse)}
+              className="mb-8"
+            />
+            
             {dualChapter ? (
               <DualChapterDisplay
                 verses={dualChapter.verses}
