@@ -179,3 +179,21 @@ export function saveReadingSettings(settings: Partial<ReadingSettings>): void {
   const current = getReadingSettings();
   localStorage.setItem(STORAGE_KEYS.READING_SETTINGS, JSON.stringify({ ...current, ...settings }));
 }
+
+// Generic storage helpers
+export function getStorageItem<T>(key: string): T | null {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setStorageItem<T>(key: string, value: T): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    console.error('Failed to save to localStorage:', key);
+  }
+}

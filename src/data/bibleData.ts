@@ -1,9 +1,15 @@
-// Bible structure for Amharic Bible
-// Data loaded from amharic_bible.json
+// Bible structure for dual-language Bible (Amharic + English)
+// Data loaded from amharic_bible.json and english_bible.json
 
 export interface Verse {
   number: number;
   text: string;
+}
+
+export interface DualVerse {
+  number: number;
+  amharic: string;
+  english: string;
 }
 
 export interface Chapter {
@@ -147,10 +153,15 @@ export function getChapterCount(bookId: string): number {
 
 // Bible data storage - will be populated from JSON
 export let BIBLE_DATA: Record<string, Chapter[]> = {};
+export let BIBLE_DATA_EN: Record<string, Chapter[]> = {};
 
 // Set Bible data (called after loading from JSON)
 export function setBibleData(data: Record<string, Chapter[]>) {
   BIBLE_DATA = data;
+}
+
+export function setBibleDataEnglish(data: Record<string, Chapter[]>) {
+  BIBLE_DATA_EN = data;
 }
 
 // Get chapter data
@@ -160,7 +171,59 @@ export function getChapter(bookId: string, chapterNum: number): Chapter | undefi
   return chapters.find(c => c.number === chapterNum);
 }
 
+export function getChapterEnglish(bookId: string, chapterNum: number): Chapter | undefined {
+  const chapters = BIBLE_DATA_EN[bookId];
+  if (!chapters) return undefined;
+  return chapters.find(c => c.number === chapterNum);
+}
+
+// Get dual language chapter
+export function getDualChapter(bookId: string, chapterNum: number): { number: number; verses: DualVerse[] } | undefined {
+  const amharicChapter = getChapter(bookId, chapterNum);
+  const englishChapter = getChapterEnglish(bookId, chapterNum);
+  
+  if (!amharicChapter && !englishChapter) return undefined;
+  
+  const maxVerses = Math.max(
+    amharicChapter?.verses.length || 0,
+    englishChapter?.verses.length || 0
+  );
+  
+  const verses: DualVerse[] = [];
+  for (let i = 0; i < maxVerses; i++) {
+    verses.push({
+      number: i + 1,
+      amharic: amharicChapter?.verses[i]?.text || '',
+      english: englishChapter?.verses[i]?.text || '',
+    });
+  }
+  
+  return { number: chapterNum, verses };
+}
+
 // Check if Bible data is loaded
 export function isBibleDataLoaded(): boolean {
   return Object.keys(BIBLE_DATA).length > 0;
 }
+
+export function isEnglishBibleLoaded(): boolean {
+  return Object.keys(BIBLE_DATA_EN).length > 0;
+}
+
+// English book names for display
+export const ENGLISH_BOOK_NAMES: Record<string, string> = {
+  gen: 'Genesis', exo: 'Exodus', lev: 'Leviticus', num: 'Numbers', deu: 'Deuteronomy',
+  jos: 'Joshua', jdg: 'Judges', rut: 'Ruth', '1sa': '1 Samuel', '2sa': '2 Samuel',
+  '1ki': '1 Kings', '2ki': '2 Kings', '1ch': '1 Chronicles', '2ch': '2 Chronicles',
+  ezr: 'Ezra', neh: 'Nehemiah', est: 'Esther', job: 'Job', psa: 'Psalms',
+  pro: 'Proverbs', ecc: 'Ecclesiastes', sng: 'Song of Solomon', isa: 'Isaiah',
+  jer: 'Jeremiah', lam: 'Lamentations', ezk: 'Ezekiel', dan: 'Daniel', hos: 'Hosea',
+  jol: 'Joel', amo: 'Amos', oba: 'Obadiah', jon: 'Jonah', mic: 'Micah',
+  nam: 'Nahum', hab: 'Habakkuk', zep: 'Zephaniah', hag: 'Haggai', zec: 'Zechariah', mal: 'Malachi',
+  mat: 'Matthew', mrk: 'Mark', luk: 'Luke', jhn: 'John', act: 'Acts',
+  rom: 'Romans', '1co': '1 Corinthians', '2co': '2 Corinthians', gal: 'Galatians',
+  eph: 'Ephesians', php: 'Philippians', col: 'Colossians', '1th': '1 Thessalonians',
+  '2th': '2 Thessalonians', '1ti': '1 Timothy', '2ti': '2 Timothy', tit: 'Titus',
+  phm: 'Philemon', heb: 'Hebrews', jas: 'James', '1pe': '1 Peter', '2pe': '2 Peter',
+  '1jn': '1 John', '2jn': '2 John', '3jn': '3 John', jud: 'Jude', rev: 'Revelation',
+};
