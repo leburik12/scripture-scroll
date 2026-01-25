@@ -8,6 +8,8 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
+  BookText,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,7 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { BibleNavigation } from '@/components/BibleNavigation';
 import { cn } from '@/lib/utils';
 
-type SidebarView = 'bible' | 'sermons' | 'songs' | 'verse' | 'contact' | 'help';
+type SidebarView = 'bible' | 'sermons' | 'songs' | 'ebooks' | 'meetings' | 'verse' | 'contact' | 'help';
 
 interface AppSidebarProps {
   currentBook: string;
@@ -31,6 +33,8 @@ const NAV_ITEMS: { id: SidebarView; label: string; amharicLabel: string; icon: R
   { id: 'bible', label: 'Bible', amharicLabel: 'መጽሐፍ ቅዱስ', icon: BookOpen },
   { id: 'sermons', label: 'Sermons', amharicLabel: 'ስብከቶች', icon: Mic2 },
   { id: 'songs', label: 'Free Songs', amharicLabel: 'ነፃ መዝሙሮች', icon: Music },
+  { id: 'ebooks', label: 'Free Ebooks', amharicLabel: 'ነፃ መጻሕፍት', icon: BookText },
+  { id: 'meetings', label: 'Meetings', amharicLabel: 'ስብሰባዎች', icon: Users },
   { id: 'verse', label: "Today's Verse", amharicLabel: 'የዛሬ ጥቅስ', icon: Sparkles },
   { id: 'contact', label: 'Contact Us', amharicLabel: 'አግኙን', icon: Mail },
   { id: 'help', label: 'Help', amharicLabel: 'እገዛ', icon: HelpCircle },
@@ -56,7 +60,7 @@ export function AppSidebar({
 
   if (collapsed) {
     return (
-      <aside className="hidden lg:flex flex-col w-14 border-r border-sidebar-border bg-sidebar">
+      <aside className="flex flex-col w-14 border-r border-sidebar-border bg-sidebar">
         <div className="flex items-center justify-center p-3 border-b border-sidebar-border">
           <Button
             variant="ghost"
@@ -91,7 +95,7 @@ export function AppSidebar({
   }
 
   return (
-    <aside className="hidden lg:flex flex-col w-72 border-r border-sidebar-border bg-sidebar transition-all duration-300">
+    <aside className="flex flex-col w-72 border-r border-sidebar-border bg-sidebar transition-all duration-300">
       {/* Sidebar Header */}
       <div className="flex items-center justify-between p-3 border-b border-sidebar-border">
         <div className="flex items-center gap-2">
@@ -164,6 +168,34 @@ export function AppSidebar({
               </p>
               <p className="text-xs text-muted-foreground mt-2">
                 Free songs coming soon. Please check back later.
+              </p>
+            </div>
+          </ScrollArea>
+        )}
+        
+        {activeView === 'ebooks' && (
+          <ScrollArea className="h-full">
+            <div className="p-4">
+              <h3 className="font-semibold text-sidebar-foreground mb-3">ነፃ መጻሕፍት</h3>
+              <p className="text-sm text-muted-foreground">
+                ነፃ መጻሕፍት በቅርቡ ይመጣሉ። እባክዎ ይጠብቁ።
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Free ebooks coming soon. Please check back later.
+              </p>
+            </div>
+          </ScrollArea>
+        )}
+        
+        {activeView === 'meetings' && (
+          <ScrollArea className="h-full">
+            <div className="p-4">
+              <h3 className="font-semibold text-sidebar-foreground mb-3">ስብሰባዎች</h3>
+              <p className="text-sm text-muted-foreground">
+                ስብሰባዎች በቅርቡ ይመጣሉ። እባክዎ ይጠብቁ።
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Meetings coming soon. Please check back later.
               </p>
             </div>
           </ScrollArea>
