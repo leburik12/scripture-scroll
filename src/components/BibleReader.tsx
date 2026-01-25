@@ -32,7 +32,7 @@ const VERSE_OF_THE_DAY = {
 };
 
 export function BibleReader() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(true); // Start with sidebar expanded
   const [searchOpen, setSearchOpen] = useState(false);
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
