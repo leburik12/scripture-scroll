@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils';
 const LANGUAGE_OPTIONS: { value: LanguageMode; label: string; flag: string }[] = [
   { value: 'amharic', label: 'አማርኛ ብቻ', flag: '🇪🇹' },
   { value: 'english', label: 'English Only', flag: '🇺🇸' },
-  { value: 'both', label: 'Side by Side', flag: '📖' },
 ];
 
 export function LanguageSelector() {

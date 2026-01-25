@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import { getStorageItem, setStorageItem } from '@/lib/storage';
 
-export type LanguageMode = 'amharic' | 'english' | 'both';
+export type LanguageMode = 'amharic' | 'english';
 
 interface LanguageContextType {
   language: LanguageMode;
@@ -15,8 +15,12 @@ const STORAGE_KEY = 'bible-language';
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<LanguageMode>(() => {
-    const stored = getStorageItem<LanguageMode>(STORAGE_KEY);
-    return stored || 'amharic';
+    const stored = getStorageItem<string>(STORAGE_KEY);
+    // Reset 'both' to 'amharic' since we removed that option
+    if (stored === 'both' || (stored !== 'amharic' && stored !== 'english')) {
+      return 'amharic';
+    }
+    return stored as LanguageMode;
   });
 
   const setLanguage = useCallback((mode: LanguageMode) => {
@@ -30,8 +34,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         return 'አማርኛ';
       case 'english':
         return 'English';
-      case 'both':
-        return 'Both / ሁለቱም';
     }
   }, []);
 

@@ -70,7 +70,7 @@ export const VerseOfTheDay = memo(function VerseOfTheDay({
         
         {/* Verse Content */}
         <div className="space-y-4">
-          {(language === 'amharic' || language === 'both') && verseData.amharic && (
+          {language === 'amharic' && verseData.amharic && (
             <blockquote className="relative">
               <div className="absolute -left-2 top-0 bottom-0 w-1 bg-primary/30 rounded-full" />
               <p className="pl-4 text-lg font-scripture leading-relaxed text-foreground">
@@ -79,13 +79,10 @@ export const VerseOfTheDay = memo(function VerseOfTheDay({
             </blockquote>
           )}
           
-          {(language === 'english' || language === 'both') && verseData.english && (
+          {language === 'english' && verseData.english && (
             <blockquote className="relative">
               <div className="absolute -left-2 top-0 bottom-0 w-1 bg-accent/50 rounded-full" />
-              <p className={cn(
-                "pl-4 leading-relaxed",
-                language === 'both' ? "text-base text-muted-foreground italic" : "text-lg text-foreground"
-              )}>
+              <p className="pl-4 text-lg leading-relaxed text-foreground">
                 "{verseData.english}"
               </p>
             </blockquote>
