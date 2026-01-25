@@ -1,31 +1,27 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { 
   Search, 
   Menu, 
-  X, 
   Bookmark, 
   BookOpen,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { AppSidebar } from '@/components/AppSidebar';
 import { BibleNavigation } from '@/components/BibleNavigation';
 import { ChapterDisplay } from '@/components/VerseDisplay';
-import { DualChapterDisplay } from '@/components/DualVerseDisplay';
 import { ChapterNavigation } from '@/components/ChapterNavigation';
 import { SearchPanel } from '@/components/SearchPanel';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { BookmarksList } from '@/components/BookmarksList';
-import { VerseOfTheDay } from '@/components/VerseOfTheDay';
 import { useBible } from '@/hooks/useBible';
 import { useTheme } from '@/hooks/useTheme';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation';
-import { getBook, getDualChapter, BIBLE_BOOKS, ENGLISH_BOOK_NAMES } from '@/data/bibleData';
+import { getChapter, ENGLISH_BOOK_NAMES } from '@/data/bibleData';
 import { cn } from '@/lib/utils';
 
 // Today's verse configuration - John 14:23
@@ -62,18 +58,15 @@ export function BibleReader() {
   const { theme, setTheme } = useTheme();
   const { language } = useLanguage();
   
-  // Get dual chapter for side-by-side display
-  const dualChapter = useMemo(() => {
-    return getDualChapter(currentBook, currentChapter);
-  }, [currentBook, currentChapter]);
+  // Get chapter based on language
+  const displayChapter = useMemo(() => {
+    return getChapter(currentBook, currentChapter, language);
+  }, [currentBook, currentChapter, language]);
   
   // Get display book name based on language
   const displayBookName = useMemo(() => {
     if (language === 'english') {
       return ENGLISH_BOOK_NAMES[currentBook] || bookName;
-    } else if (language === 'both') {
-      const englishName = ENGLISH_BOOK_NAMES[currentBook] || '';
-      return `${bookName} / ${englishName}`;
     }
     return bookName;
   }, [language, currentBook, bookName]);
@@ -101,6 +94,11 @@ export function BibleReader() {
     setBookmarksOpen(false);
   }, [goToLocation]);
   
+  // Handle today's verse navigation
+  const handleNavigateToVerse = useCallback(() => {
+    goToLocation(VERSE_OF_THE_DAY.bookId, VERSE_OF_THE_DAY.chapter, VERSE_OF_THE_DAY.verse);
+  }, [goToLocation]);
+  
   // Create bookmark map for current chapter
   const bookmarkSet = useMemo(() => {
     return new Set(
@@ -113,45 +111,15 @@ export function BibleReader() {
   return (
     <div className="flex min-h-screen w-full bg-background transition-theme">
       {/* Desktop Sidebar */}
-      <aside 
-        className={cn(
-          "hidden lg:flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300",
-          sidebarOpen ? "w-72" : "w-14"
-        )}
-      >
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-3 border-b border-sidebar-border">
-          {sidebarOpen && (
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-primary" />
-              <span className="font-semibold text-sidebar-foreground">መጽሐፍ ቅዱስ</span>
-            </div>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="shrink-0"
-          >
-            {sidebarOpen ? (
-              <ChevronLeft className="w-4 h-4" />
-            ) : (
-              <ChevronRight className="w-4 h-4" />
-            )}
-          </Button>
-        </div>
-        
-        {/* Navigation */}
-        <div className="flex-1 overflow-hidden">
-          <BibleNavigation
-            currentBook={currentBook}
-            currentChapter={currentChapter}
-            onSelectBook={goToBook}
-            onSelectChapter={goToLocation}
-            collapsed={!sidebarOpen}
-          />
-        </div>
-      </aside>
+      <AppSidebar
+        currentBook={currentBook}
+        currentChapter={currentChapter}
+        onSelectBook={goToBook}
+        onSelectChapter={goToLocation}
+        collapsed={!sidebarOpen}
+        onToggleCollapse={() => setSidebarOpen(!sidebarOpen)}
+        onNavigateToVerse={handleNavigateToVerse}
+      />
       
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
@@ -237,23 +205,10 @@ export function BibleReader() {
         
         {/* Scripture Content */}
         <ScrollArea className="flex-1">
-          <div className={cn(
-            "mx-auto px-4 md:px-8 py-8 md:py-12",
-            language === 'both' ? 'max-w-5xl' : 'max-w-3xl'
-          )}>
-            {/* Verse of the Day - shown at top of content */}
-            <VerseOfTheDay
-              bookId={VERSE_OF_THE_DAY.bookId}
-              chapter={VERSE_OF_THE_DAY.chapter}
-              verse={VERSE_OF_THE_DAY.verse}
-              onNavigate={(bookId, chapter, verse) => goToLocation(bookId, chapter, verse)}
-              className="mb-8"
-            />
-            
-            {dualChapter ? (
-              <DualChapterDisplay
-                verses={dualChapter.verses}
-                language={language}
+          <div className="max-w-3xl mx-auto px-4 md:px-8 py-8 md:py-12">
+            {displayChapter ? (
+              <ChapterDisplay
+                verses={displayChapter.verses}
                 bookmarkMap={bookmarkSet}
                 showVerseNumbers={true}
                 onVerseClick={(verseNum) => toggleBookmark(verseNum)}

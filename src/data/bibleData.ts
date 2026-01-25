@@ -164,8 +164,16 @@ export function setBibleDataEnglish(data: Record<string, Chapter[]>) {
   BIBLE_DATA_EN = data;
 }
 
-// Get chapter data
-export function getChapter(bookId: string, chapterNum: number): Chapter | undefined {
+// Get chapter data based on language
+export function getChapter(bookId: string, chapterNum: number, language: 'amharic' | 'english' = 'amharic'): Chapter | undefined {
+  const dataSource = language === 'english' ? BIBLE_DATA_EN : BIBLE_DATA;
+  const chapters = dataSource[bookId];
+  if (!chapters) return undefined;
+  return chapters.find(c => c.number === chapterNum);
+}
+
+// Get Amharic chapter specifically
+export function getAmharicChapter(bookId: string, chapterNum: number): Chapter | undefined {
   const chapters = BIBLE_DATA[bookId];
   if (!chapters) return undefined;
   return chapters.find(c => c.number === chapterNum);
