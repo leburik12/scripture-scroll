@@ -1,9 +1,8 @@
-import { useState, useMemo } from 'react';
-import { Search, Download, BookOpen, Filter, X } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { Search, Download, BookOpen, Filter, X, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
 type BookCategory =
@@ -32,15 +31,6 @@ const CATEGORIES: BookCategory[] = [
   'Church History',
   'Biographies',
 ];
-
-const CATEGORY_AMHARIC: Record<BookCategory, string> = {
-  'Biblical Studies': 'መጽሐፍ ቅዱሳዊ ጥናት',
-  'Systematic Theology': 'ስልታዊ ሥነ መለኮት',
-  'Prayer & Intercession': 'ጸሎት እና ምልጃ',
-  'Christian Living': 'ክርስቲያናዊ ኑሮ',
-  'Church History': 'የቤተ ክርስቲያን ታሪክ',
-  'Biographies': 'የሕይወት ታሪኮች',
-};
 
 const BOOKS: Book[] = [
   {
@@ -144,11 +134,13 @@ const BOOKS: Book[] = [
   },
 ];
 
+const ITEMS_PER_PAGE = 4;
+
 function BookCover({ book }: { book: Book }) {
   return (
     <div
       className={cn(
-        'relative w-full aspect-[2/3] rounded-md shadow-lg overflow-hidden bg-gradient-to-br',
+        'relative w-full h-52 rounded-md shadow-lg overflow-hidden bg-gradient-to-br',
         book.coverColor
       )}
     >
@@ -159,40 +151,53 @@ function BookCover({ book }: { book: Book }) {
         </h4>
         <p className="text-white/60 text-xs mt-2">{book.author}</p>
       </div>
-      {/* Spine effect */}
       <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-black/20" />
-      {/* Glare */}
       <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/10 to-transparent" />
     </div>
   );
 }
 
-function BookCard({ book }: { book: Book }) {
+function BookCard({ book, style }: { book: Book; style?: React.CSSProperties }) {
   return (
-    <div className="group flex flex-col animate-fade-in">
-      {/* Cover */}
+    <div className="group flex flex-col h-full animate-fade-in" style={style}>
+      {/* Cover - fixed height */}
       <div className="relative mb-3 transition-transform duration-200 group-hover:scale-[1.03] group-hover:-translate-y-1">
         <BookCover book={book} />
       </div>
 
-      {/* Info */}
-      <h3 className="font-semibold text-sm text-foreground line-clamp-2 leading-snug mb-1">
-        {book.title}
-      </h3>
-      <p className="text-xs text-muted-foreground mb-2">{book.author}</p>
-      <Badge variant="secondary" className="w-fit text-[10px] mb-3">
-        {book.category}
-      </Badge>
+      {/* Info - flex grow to push button down */}
+      <div className="flex flex-col flex-1">
+        <h3 className="font-semibold text-sm text-foreground line-clamp-2 leading-snug mb-1 h-10">
+          {book.title}
+        </h3>
+        <p className="text-xs text-muted-foreground mb-2">{book.author}</p>
+        <Badge variant="secondary" className="w-fit text-[10px] mb-3">
+          {book.category}
+        </Badge>
 
-      {/* CTA */}
-      <Button
-        size="sm"
-        className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium text-xs shadow-sm"
-        onClick={() => window.open(book.telegramLink, '_blank')}
-      >
-        <Download className="w-3.5 h-3.5 mr-1.5" />
-        Download on Telegram
-      </Button>
+        <div className="mt-auto">
+          <Button
+            size="sm"
+            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium text-xs shadow-sm"
+            onClick={() => window.open(book.telegramLink, '_blank')}
+          >
+            <Download className="w-3.5 h-3.5 mr-1.5" />
+            Download on Telegram
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="flex flex-col h-full animate-pulse">
+      <div className="w-full h-52 rounded-md bg-muted mb-3" />
+      <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+      <div className="h-3 bg-muted rounded w-1/2 mb-2" />
+      <div className="h-5 bg-muted rounded-full w-20 mb-3" />
+      <div className="mt-auto h-8 bg-muted rounded" />
     </div>
   );
 }
@@ -200,7 +205,9 @@ function BookCard({ book }: { book: Book }) {
 export function EbooksLibrary() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<BookCategory | null>(null);
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [isLoading, setIsLoading] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const filteredBooks = useMemo(() => {
     return BOOKS.filter((book) => {
@@ -213,124 +220,176 @@ export function EbooksLibrary() {
     });
   }, [searchQuery, activeCategory]);
 
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [searchQuery, activeCategory]);
+
+  const hasMore = visibleCount < filteredBooks.length;
+
+  const loadMore = useCallback(() => {
+    if (isLoading || !hasMore) return;
+    setIsLoading(true);
+    // Simulate network fetch delay
+    setTimeout(() => {
+      setVisibleCount((prev) => Math.min(prev + ITEMS_PER_PAGE, filteredBooks.length));
+      setIsLoading(false);
+    }, 600);
+  }, [isLoading, hasMore, filteredBooks.length]);
+
+  // IntersectionObserver for infinite scroll
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore]);
+
+  const visibleBooks = filteredBooks.slice(0, visibleCount);
   const featuredBooks = useMemo(() => BOOKS.filter((b) => b.featured), []);
 
   return (
-    <ScrollArea className="h-full">
-      <div className="min-h-full bg-background">
-        {/* Header */}
-        <div className="border-b border-border bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 px-4 py-4">
-          <div className="flex items-center gap-2 mb-3">
-            <BookOpen className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-bold text-foreground tracking-tight">SpiritLib</h2>
-            <span className="text-xs text-muted-foreground ml-1">Free Spiritual Library</span>
-          </div>
-
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by title or author..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-9 h-9 text-sm bg-background/80"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-              >
-                <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
-              </button>
-            )}
-          </div>
+    <div className="max-w-5xl mx-auto px-4 md:px-8 py-6">
+      {/* Header */}
+      <div className="rounded-xl border border-border bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 px-6 py-5 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <BookOpen className="w-6 h-6 text-primary" />
+          <h2 className="text-2xl font-bold text-foreground tracking-tight">SpiritLib</h2>
+          <span className="text-sm text-muted-foreground ml-2">Free Spiritual Library</span>
         </div>
 
-        {/* Category Filters */}
-        <div className="px-4 py-3 border-b border-border">
-          <div className="flex items-center gap-2 mb-2">
-            <Filter className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Categories
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
+        {/* Search */}
+        <div className="relative max-w-xl">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by title or author..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-9 h-10 text-sm bg-background/80"
+          />
+          {searchQuery && (
             <button
-              onClick={() => setActiveCategory(null)}
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+            >
+              <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Category Filters */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Filter className="w-4 h-4 text-muted-foreground" />
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Categories
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setActiveCategory(null)}
+            className={cn(
+              'px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
+              !activeCategory
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-secondary text-secondary-foreground hover:bg-accent'
+            )}
+          >
+            All
+          </button>
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
               className={cn(
-                'px-2.5 py-1 rounded-full text-xs font-medium transition-colors',
-                !activeCategory
+                'px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
+                activeCategory === cat
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-secondary text-secondary-foreground hover:bg-accent'
               )}
             >
-              All
+              {cat}
             </button>
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
-                className={cn(
-                  'px-2.5 py-1 rounded-full text-xs font-medium transition-colors',
-                  activeCategory === cat
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-secondary-foreground hover:bg-accent'
-                )}
-              >
-                {cat}
-              </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Featured Rail */}
+      {!searchQuery && !activeCategory && (
+        <div className="mb-6 pb-6 border-b border-border">
+          <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+            ✨ Featured Books
+          </h3>
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {featuredBooks.map((book) => (
+              <div key={book.id} className="flex-shrink-0 w-32">
+                <BookCover book={book} />
+                <p className="text-xs font-medium text-foreground mt-2 line-clamp-1">
+                  {book.title}
+                </p>
+              </div>
             ))}
           </div>
         </div>
+      )}
 
-        {/* Featured Rail */}
-        {!searchQuery && !activeCategory && (
-          <div className="px-4 py-4 border-b border-border">
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              ✨ Featured Books
-            </h3>
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
-              {featuredBooks.map((book) => (
-                <div key={book.id} className="flex-shrink-0 w-28">
-                  <BookCover book={book} />
-                  <p className="text-xs font-medium text-foreground mt-2 line-clamp-1">
-                    {book.title}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+      {/* Results Count */}
+      <div className="mb-4">
+        <p className="text-xs text-muted-foreground">
+          Showing {visibleBooks.length} of {filteredBooks.length}{' '}
+          {filteredBooks.length === 1 ? 'book' : 'books'}
+          {activeCategory && <span> in "{activeCategory}"</span>}
+        </p>
+      </div>
 
-        {/* Results Count */}
-        <div className="px-4 pt-4 pb-2">
-          <p className="text-xs text-muted-foreground">
-            {filteredBooks.length} {filteredBooks.length === 1 ? 'book' : 'books'} found
-            {activeCategory && <span> in "{activeCategory}"</span>}
+      {/* Book Grid - equal height cards */}
+      {visibleBooks.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+          {visibleBooks.map((book, i) => (
+            <BookCard
+              key={book.id}
+              book={book}
+              style={{ animationDelay: `${(i % ITEMS_PER_PAGE) * 80}ms` }}
+            />
+          ))}
+          {/* Loading skeletons */}
+          {isLoading &&
+            Array.from({ length: Math.min(ITEMS_PER_PAGE, filteredBooks.length - visibleCount) }).map((_, i) => (
+              <SkeletonCard key={`skeleton-${i}`} />
+            ))}
+        </div>
+      ) : (
+        <div className="text-center py-16">
+          <BookOpen className="w-12 h-12 mx-auto text-muted-foreground/40 mb-3" />
+          <p className="text-sm text-muted-foreground">No books found</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Try adjusting your search or filter
           </p>
         </div>
+      )}
 
-        {/* Book Grid */}
-        <div className="px-4 pb-6">
-          {filteredBooks.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {filteredBooks.map((book) => (
-                <BookCard key={book.id} book={book} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <BookOpen className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
-              <p className="text-sm text-muted-foreground">No books found</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Try adjusting your search or filter
-              </p>
-            </div>
-          )}
+      {/* Infinite scroll sentinel */}
+      {hasMore && (
+        <div ref={sentinelRef} className="flex items-center justify-center py-8">
+          <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+          <span className="text-xs text-muted-foreground ml-2">Loading more books...</span>
         </div>
+      )}
 
-        {/* Footer */}
-        <div className="px-4 py-4 border-t border-border text-center">
+      {/* End of list */}
+      {!hasMore && visibleBooks.length > 0 && (
+        <div className="text-center py-8 border-t border-border mt-6">
           <p className="text-xs text-muted-foreground">
             📚 All books are free for spiritual growth
           </p>
@@ -338,7 +397,7 @@ export function EbooksLibrary() {
             Request books via our Telegram channel
           </p>
         </div>
-      </div>
-    </ScrollArea>
+      )}
+    </div>
   );
 }
