@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { BibleNavigation } from '@/components/BibleNavigation';
+import { EbooksLibrary } from '@/components/EbooksLibrary';
 import { cn } from '@/lib/utils';
 
 type SidebarView = 'bible' | 'sermons' | 'songs' | 'ebooks' | 'meetings' | 'verse' | 'contact' | 'help';
@@ -174,17 +175,7 @@ export function AppSidebar({
         )}
         
         {activeView === 'ebooks' && (
-          <ScrollArea className="h-full">
-            <div className="p-4">
-              <h3 className="font-semibold text-sidebar-foreground mb-3">ነፃ መጻሕፍት</h3>
-              <p className="text-sm text-muted-foreground">
-                ነፃ መጻሕፍት በቅርቡ ይመጣሉ። እባክዎ ይጠብቁ።
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                Free ebooks coming soon. Please check back later.
-              </p>
-            </div>
-          </ScrollArea>
+          <EbooksLibrary />
         )}
         
         {activeView === 'meetings' && (
