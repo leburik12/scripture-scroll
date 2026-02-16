@@ -15,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { BibleNavigation } from '@/components/BibleNavigation';
-import { EbooksLibrary } from '@/components/EbooksLibrary';
 import { cn } from '@/lib/utils';
 
 type SidebarView = 'bible' | 'sermons' | 'songs' | 'ebooks' | 'meetings' | 'verse' | 'contact' | 'help';
@@ -28,6 +27,7 @@ interface AppSidebarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
   onNavigateToVerse?: () => void;
+  onViewChange?: (view: SidebarView) => void;
 }
 
 const NAV_ITEMS: { id: SidebarView; label: string; amharicLabel: string; icon: React.ElementType }[] = [
@@ -49,6 +49,7 @@ export function AppSidebar({
   collapsed,
   onToggleCollapse,
   onNavigateToVerse,
+  onViewChange,
 }: AppSidebarProps) {
   const [activeView, setActiveView] = useState<SidebarView>('bible');
 
@@ -57,6 +58,7 @@ export function AppSidebar({
     if (id === 'verse' && onNavigateToVerse) {
       onNavigateToVerse();
     }
+    onViewChange?.(id);
   };
 
   if (collapsed) {
@@ -175,7 +177,11 @@ export function AppSidebar({
         )}
         
         {activeView === 'ebooks' && (
-          <EbooksLibrary />
+          <div className="p-4">
+            <p className="text-sm text-muted-foreground">
+              📚 ነፃ መጻሕፍት በዋናው ገጽ ላይ ይታያሉ።
+            </p>
+          </div>
         )}
         
         {activeView === 'meetings' && (

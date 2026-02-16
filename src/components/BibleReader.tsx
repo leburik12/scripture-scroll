@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/AppSidebar';
+import { EbooksLibrary } from '@/components/EbooksLibrary';
 import { BibleNavigation } from '@/components/BibleNavigation';
 import { ChapterDisplay } from '@/components/VerseDisplay';
 import { ChapterNavigation } from '@/components/ChapterNavigation';
@@ -32,10 +33,11 @@ const VERSE_OF_THE_DAY = {
 };
 
 export function BibleReader() {
-  const [sidebarOpen, setSidebarOpen] = useState(true); // Start with sidebar expanded
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [activeView, setActiveView] = useState<string>('bible');
   
   const {
     currentBook,
@@ -119,6 +121,7 @@ export function BibleReader() {
         collapsed={!sidebarOpen}
         onToggleCollapse={() => setSidebarOpen(!sidebarOpen)}
         onNavigateToVerse={handleNavigateToVerse}
+        onViewChange={(view) => setActiveView(view)}
       />
       
       {/* Main Content */}
@@ -203,29 +206,33 @@ export function BibleReader() {
           </div>
         </header>
         
-        {/* Scripture Content */}
+        {/* Main Content Area */}
         <ScrollArea className="flex-1">
-          <div className="max-w-3xl mx-auto px-4 md:px-8 py-8 md:py-12">
-            {displayChapter ? (
-              <ChapterDisplay
-                verses={displayChapter.verses}
-                bookmarkMap={bookmarkSet}
-                showVerseNumbers={true}
-                onVerseClick={(verseNum) => toggleBookmark(verseNum)}
-                onBookmarkClick={(verseNum) => toggleBookmark(verseNum)}
-              />
-            ) : (
-              <div className="text-center py-12">
-                <BookOpen className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                <h2 className="text-xl font-semibold text-foreground mb-2">
-                  ምዕራፍ አልተገኘም
-                </h2>
-                <p className="text-muted-foreground">
-                  ይህ ምዕራፍ ገና አልተጫነም። ኦሪት ዘፍጥረት 1 ወይም የዮሐንስ ወንጌል 1 ይምረጡ።
-                </p>
-              </div>
-            )}
-          </div>
+          {activeView === 'ebooks' ? (
+            <EbooksLibrary />
+          ) : (
+            <div className="max-w-3xl mx-auto px-4 md:px-8 py-8 md:py-12">
+              {displayChapter ? (
+                <ChapterDisplay
+                  verses={displayChapter.verses}
+                  bookmarkMap={bookmarkSet}
+                  showVerseNumbers={true}
+                  onVerseClick={(verseNum) => toggleBookmark(verseNum)}
+                  onBookmarkClick={(verseNum) => toggleBookmark(verseNum)}
+                />
+              ) : (
+                <div className="text-center py-12">
+                  <BookOpen className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <h2 className="text-xl font-semibold text-foreground mb-2">
+                    ምዕራፍ አልተገኘም
+                  </h2>
+                  <p className="text-muted-foreground">
+                    ይህ ምዕራፍ ገና አልተጫነም። ኦሪት ዘፍጥረት 1 ወይም የዮሐንስ ወንጌል 1 ይምረጡ።
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </ScrollArea>
         
         {/* Resume Reading Banner */}
